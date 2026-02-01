@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieHub - Movie Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #e8f4fc; color: #2c3e50; min-height: 100vh; }
+        .navbar { background-color: #5dade2 !important; }
+        .navbar-brand { color: #fff !important; font-weight: bold; font-size: 1.5rem; }
+        .nav-link { color: #fff !important; }
+        .nav-link:hover { color: #1a5276 !important; }
+        .movie-poster-large { max-height: 450px; object-fit: cover; border-radius: 10px; }
+        .category-badge { background-color: #3498db; }
+        .rating-stars { color: #f39c12; font-size: 1.5rem; }
+        .btn-primary { background-color: #3498db; border-color: #3498db; }
+        .btn-primary:hover { background-color: #2980b9; border-color: #2980b9; }
+        .btn-outline-primary { color: #3498db; border-color: #3498db; }
+        .btn-outline-primary:hover { background-color: #3498db; color: #fff; }
+        .review-card { background-color: #fff; border: 1px solid #aed6f1; margin-bottom: 15px; }
+        .review-rating { color: #f39c12; }
+        .form-control, .form-select { background-color: #fff; border: 1px solid #aed6f1; color: #2c3e50; }
+        .form-control:focus, .form-select:focus { background-color: #fff; color: #2c3e50; border-color: #3498db; box-shadow: 0 0 5px rgba(52,152,219,0.5); }
+        .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; }
+        .star-rating input { display: none; }
+        .star-rating label { cursor: pointer; font-size: 2rem; color: #aed6f1; transition: color 0.2s; }
+        .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #f39c12; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">MovieHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/movies">All Movies</a></li>
+                </ul>
+                <ul class="navbar-nav" id="authNav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row" id="movieDetail">
+            <div class="col-12 text-center"><p>Loading...</p></div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="mb-4">Reviews</h3>
+
+                <!-- Review Form (only if logged in) -->
+                <div id="reviewFormContainer" class="card review-card p-4 mb-4 d-none">
+                    <h5 class="mb-3">Write a Review</h5>
+                    <div id="reviewMessage" class="alert d-none"></div>
+                    <form id="reviewForm">
+                        <div class="mb-3">
+                            <label class="form-label">Rating</label>
+                            <div class="star-rating">
+                                <input type="radio" id="star5" name="rating" value="5" required>
+                                <label for="star5">★</label>
+                                <input type="radio" id="star4" name="rating" value="4">
+                                <label for="star4">★</label>
+                                <input type="radio" id="star3" name="rating" value="3">
+                                <label for="star3">★</label>
+                                <input type="radio" id="star2" name="rating" value="2">
+                                <label for="star2">★</label>
+                                <input type="radio" id="star1" name="rating" value="1">
+                                <label for="star1">★</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Your Review</label>
+                            <textarea class="form-control" id="reviewContent" rows="4" required placeholder="Write your review..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </form>
+                </div>
+
+                <div id="loginPrompt" class="card review-card p-4 mb-4 text-center d-none">
+                    <p class="mb-2">Please login to write a review</p>
+                    <a href="/login" class="btn btn-primary" style="width: 200px; margin: 0 auto;">Login</a>
+                </div>
+
+                <div id="reviewsList">
+                    <p class="text-muted">Loading reviews...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-4 mt-auto" style="background-color: #5dade2;">
+        <div class="container text-center">
+            <p class="mb-0 text-white">MovieHub - Part 2: Auth & Admin</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const movieId = {{ movie_id }};
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+        function updateNav() {
+            const authNav = document.getElementById('authNav');
+            if (token && user) {
+                authNav.innerHTML = `
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">My Reviews</a></li>
+                    ${user.is_admin ? '<li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>' : ''}
+                    <li class="nav-item"><span class="nav-link">Hi, ${user.username}</span></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                `;
+                document.getElementById('reviewFormContainer').classList.remove('d-none');
+            } else {
+                authNav.innerHTML = `
+                    <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-primary btn-sm ms-2" href="/register">Register</a></li>
+                `;
+                document.getElementById('loginPrompt').classList.remove('d-none');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.reload();
+        }
+
+        async function loadMovie() {
+            const res = await fetch(`/api/movies/${movieId}`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                document.getElementById('movieDetail').innerHTML = '<h2>Movie not found</h2>';
+                return;
+            }
+
+            const movie = data.movie;
+            document.title = `MovieHub - ${movie.title}`;
+            document.getElementById('movieDetail').innerHTML = `
+                <div class="col-md-4">
+                    <img src="${movie.poster_url}" class="img-fluid movie-poster-large" alt="${movie.title}">
+                </div>
+                <div class="col-md-8">
+                    <h1 class="mb-3">${movie.title}</h1>
+                    <span class="badge category-badge mb-3">${movie.category}</span>
+                    <span class="badge bg-secondary mb-3">${movie.year}</span>
+                    <div class="rating-stars mb-3">
+                        ${getStars(movie.avg_rating)}
+                        <span class="text-muted" style="font-size: 1rem;">(${movie.review_count} reviews)</span>
+                    </div>
+                    <p class="lead">${movie.description || 'No description available.'}</p>
+                    <a href="/" class="btn btn-outline-primary mt-3">← Back to Movies</a>
+                </div>
+            `;
+        }
+
+        async function loadReviews() {
+            const res = await fetch(`/api/movies/${movieId}/reviews`);
+            const data = await res.json();
+            const container = document.getElementById('reviewsList');
+
+            if (data.reviews.length === 0) {
+                container.innerHTML = '<p class="text-muted">No reviews yet. Be the first!</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            data.reviews.forEach(review => {
+                const canDelete = user && (user.id === review.user_id || user.is_admin);
+                container.innerHTML += `
+                    <div class="card review-card p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${review.username}</h6>
+                                <div class="review-rating mb-2">${getStars(review.rating)}</div>
+                            </div>
+                            <div>
+                                <small class="text-muted me-2">${review.created_at}</small>
+                                ${canDelete ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteReview(${review.id})">Delete</button>` : ''}
+                            </div>
+                        </div>
+                        <p class="mb-0">${review.content}</p>
+                    </div>
+                `;
+            });
+        }
+
+        function getStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) stars += i <= rating ? '★' : '☆';
+            return stars;
+        }
+
+        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const rating = document.querySelector('input[name="rating"]:checked');
+            const content = document.getElementById('reviewContent').value;
+
+            if (!rating) {
+                showMessage('Please select a rating', 'danger');
+                return;
+            }
+
+            const res = await fetch(`/api/movies/${movieId}/reviews`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ rating: rating.value, content })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                showMessage('Review added!', 'success');
+                document.getElementById('reviewForm').reset();
+                loadReviews();
+                loadMovie();
+            } else {
+                showMessage(data.error, 'danger');
+            }
+        });
+
+        async function deleteReview(reviewId) {
+            if (!confirm('Delete this review?')) return;
+
+            const res = await fetch(`/api/reviews/${reviewId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                loadReviews();
+                loadMovie();
+            }
+        }
+
+        function showMessage(msg, type) {
+            const el = document.getElementById('reviewMessage');
+            el.textContent = msg;
+            el.className = `alert alert-${type}`;
+            setTimeout(() => el.className = 'alert d-none', 3000);
+        }
+
+        updateNav();
+        loadMovie();
+        loadReviews();
+    </script>
+</body>
+</html>

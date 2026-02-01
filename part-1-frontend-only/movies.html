@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieHub - All Movies</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #e8f4fc; color: #2c3e50; min-height: 100vh; }
+        .navbar { background-color: #5dade2 !important; }
+        .navbar-brand { color: #fff !important; font-weight: bold; font-size: 1.5rem; }
+        .nav-link { color: #fff !important; }
+        .nav-link:hover, .nav-link.active { color: #1a5276 !important; }
+        .movie-card { background-color: #fff; border: 1px solid #aed6f1; transition: transform 0.3s; cursor: pointer; }
+        .movie-card:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(93,173,226,0.3); }
+        .movie-poster { height: 300px; object-fit: cover; }
+        .category-badge { background-color: #3498db; }
+        .rating-stars { color: #f39c12; }
+        .search-box { background-color: #fff; border: 1px solid #aed6f1; color: #2c3e50; }
+        .search-box:focus { background-color: #fff; color: #2c3e50; border-color: #3498db; box-shadow: 0 0 5px rgba(52,152,219,0.5); }
+        .search-box::placeholder { color: #7f8c8d; }
+        .btn-primary { background-color: #3498db; border-color: #3498db; }
+        .btn-primary:hover { background-color: #2980b9; border-color: #2980b9; }
+        .btn-outline-primary { color: #3498db; border-color: #3498db; }
+        .btn-outline-primary:hover { background-color: #3498db; border-color: #3498db; color: #fff; }
+        .category-btn { margin: 5px; color: #3498db; border-color: #3498db; }
+        .category-btn:hover { background-color: #3498db; color: #fff; }
+        .category-btn.active { background-color: #3498db; border-color: #3498db; color: #fff; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">MovieHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="movies.html">All Movies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+                </ul>
+                <ul class="navbar-nav" id="userNav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="container py-4">
+        <h1 class="mb-4">All Movies</h1>
+
+        <!-- Search and Filter -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <input type="text" class="form-control search-box" id="searchInput" placeholder="Search by title...">
+            </div>
+            <div class="col-md-6">
+                <div id="categoryButtons">
+                    <button class="btn btn-outline-primary category-btn active" data-category="">All</button>
+                    <button class="btn btn-outline-primary category-btn" data-category="Action">Action</button>
+                    <button class="btn btn-outline-primary category-btn" data-category="Comedy">Comedy</button>
+                    <button class="btn btn-outline-primary category-btn" data-category="Drama">Drama</button>
+                    <button class="btn btn-outline-primary category-btn" data-category="Horror">Horror</button>
+                    <button class="btn btn-outline-primary category-btn" data-category="Sci-Fi">Sci-Fi</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movie Count -->
+        <p class="text-muted mb-4" id="movieCount">Showing 8 movies</p>
+
+        <!-- Movies Grid -->
+        <div class="row" id="moviesContainer">
+            <!-- Movies will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-auto" style="background-color: #5dade2;">
+        <div class="container text-center">
+            <p class="mb-0 text-white">MovieHub - Part 1: Frontend Only</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="data.js"></script>
+    <script>
+        let selectedCategory = '';
+
+        // Display movies
+        function displayMovies(moviesToShow) {
+            const container = document.getElementById('moviesContainer');
+            container.innerHTML = '';
+
+            document.getElementById('movieCount').textContent = `Showing ${moviesToShow.length} movies`;
+
+            if (moviesToShow.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center"><p>No movies found.</p></div>';
+                return;
+            }
+
+            moviesToShow.forEach(movie => {
+                const avgRating = getAverageRating(movie.id);
+                const reviewCount = getReviewCount(movie.id);
+
+                const card = `
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card movie-card h-100" onclick="window.location.href='movie.html?id=${movie.id}'">
+                            <img src="${movie.poster}" class="card-img-top movie-poster" alt="${movie.title}">
+                            <div class="card-body">
+                                <h5 class="card-title">${movie.title}</h5>
+                                <span class="badge category-badge mb-2">${movie.category}</span>
+                                <span class="badge bg-secondary mb-2">${movie.year}</span>
+                                <div class="rating-stars">
+                                    ${getStarRating(avgRating)}
+                                    <small class="text-muted">(${reviewCount})</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        // Get star rating HTML
+        function getStarRating(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= rating ? '★' : '☆';
+            }
+            return stars;
+        }
+
+        // Get average rating for a movie
+        function getAverageRating(movieId) {
+            const reviews = getReviews().filter(r => r.movieId === movieId);
+            if (reviews.length === 0) return 0;
+            const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+            return Math.round(sum / reviews.length);
+        }
+
+        // Get review count
+        function getReviewCount(movieId) {
+            return getReviews().filter(r => r.movieId === movieId).length;
+        }
+
+        // Filter movies
+        function filterMovies() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = movies.filter(movie => {
+                const matchesSearch = movie.title.toLowerCase().includes(searchTerm);
+                const matchesCategory = selectedCategory === '' || movie.category === selectedCategory;
+                return matchesSearch && matchesCategory;
+            });
+
+            displayMovies(filtered);
+        }
+
+        // Category button click
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedCategory = this.dataset.category;
+                filterMovies();
+            });
+        });
+
+        // Search input
+        document.getElementById('searchInput').addEventListener('input', filterMovies);
+
+        // Update user nav
+        function updateUserNav() {
+            const userName = localStorage.getItem('moviehub_username');
+            const userNav = document.getElementById('userNav');
+            if (userName) {
+                userNav.innerHTML = `<li class="nav-item"><span class="nav-link">Hi, ${userName}</span></li>`;
+            }
+        }
+
+        // Initial load
+        updateUserNav();
+        displayMovies(movies);
+    </script>
+</body>
+</html>

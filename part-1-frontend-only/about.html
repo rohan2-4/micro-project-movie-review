@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieHub - About</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #e8f4fc; color: #2c3e50; min-height: 100vh; }
+        .navbar { background-color: #5dade2 !important; }
+        .navbar-brand { color: #fff !important; font-weight: bold; font-size: 1.5rem; }
+        .nav-link { color: #fff !important; }
+        .nav-link:hover, .nav-link.active { color: #1a5276 !important; }
+        .feature-card { background-color: #fff; border: 1px solid #aed6f1; padding: 30px; text-align: center; height: 100%; }
+        .feature-icon { font-size: 3rem; margin-bottom: 20px; }
+        .highlight { color: #3498db; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">MovieHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="movies.html">All Movies</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="about.html">About</a></li>
+                </ul>
+                <ul class="navbar-nav" id="userNav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- About Section -->
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1>About <span class="highlight">MovieHub</span></h1>
+            <p class="lead">Your ultimate destination for movie reviews and ratings</p>
+        </div>
+
+        <!-- Features -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card">
+                    <div class="feature-icon">🎬</div>
+                    <h4>Browse Movies</h4>
+                    <p class="text-muted">Explore our collection of movies across different genres including Action, Comedy, Drama, Horror, and Sci-Fi.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <h4>Rate & Review</h4>
+                    <p class="text-muted">Share your thoughts and rate movies you've watched. Help others discover great films!</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h4>Search & Filter</h4>
+                    <p class="text-muted">Find movies easily with our search feature. Filter by category to discover new favorites.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part Info -->
+        <div class="card feature-card">
+            <h3 class="mb-4">Part 1: Frontend Only</h3>
+            <p>This is <strong>Part 1</strong> of the Movie Review Platform project. In this part, we focus on:</p>
+            <ul class="text-start" style="max-width: 600px; margin: 0 auto;">
+                <li>HTML templates with Bootstrap 5</li>
+                <li>Responsive design for all devices</li>
+                <li>Dummy movie data in JavaScript</li>
+                <li>Reviews stored in localStorage</li>
+                <li>Search and filter functionality</li>
+                <li>Star rating system</li>
+                <li>Navigation between pages</li>
+            </ul>
+            <p class="mt-4 text-muted">In the next parts, we will add Flask backend, user authentication, admin panel, and more!</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="row mt-5 text-center">
+            <div class="col-md-4 mb-3">
+                <h2 class="highlight" id="movieCount">8</h2>
+                <p>Movies</p>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h2 class="highlight">5</h2>
+                <p>Categories</p>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h2 class="highlight" id="reviewCount">0</h2>
+                <p>Reviews</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-auto" style="background-color: #5dade2;">
+        <div class="container text-center">
+            <p class="mb-0 text-white">MovieHub - Part 1: Frontend Only</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="data.js"></script>
+    <script>
+        // Update user nav
+        function updateUserNav() {
+            const userName = localStorage.getItem('moviehub_username');
+            const userNav = document.getElementById('userNav');
+            if (userName) {
+                userNav.innerHTML = `<li class="nav-item"><span class="nav-link">Hi, ${userName}</span></li>`;
+            }
+        }
+
+        // Update stats
+        document.getElementById('movieCount').textContent = movies.length;
+        document.getElementById('reviewCount').textContent = getReviews().length;
+        updateUserNav();
+    </script>
+</body>
+</html>

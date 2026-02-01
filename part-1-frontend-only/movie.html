@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieHub - Movie Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #e8f4fc; color: #2c3e50; min-height: 100vh; }
+        .navbar { background-color: #5dade2 !important; }
+        .navbar-brand { color: #fff !important; font-weight: bold; font-size: 1.5rem; }
+        .nav-link { color: #fff !important; }
+        .nav-link:hover { color: #1a5276 !important; }
+        .movie-detail-card { background-color: #fff; border: 1px solid #aed6f1; }
+        .movie-poster-large { max-height: 450px; object-fit: cover; border-radius: 10px; }
+        .category-badge { background-color: #3498db; }
+        .rating-stars { color: #f39c12; font-size: 1.5rem; }
+        .btn-primary { background-color: #3498db; border-color: #3498db; }
+        .btn-primary:hover { background-color: #2980b9; border-color: #2980b9; }
+        .btn-outline-primary { color: #3498db; border-color: #3498db; }
+        .btn-outline-primary:hover { background-color: #3498db; color: #fff; }
+        .review-card { background-color: #fff; border: 1px solid #aed6f1; margin-bottom: 15px; }
+        .review-rating { color: #f39c12; }
+        .form-control { background-color: #fff; border: 1px solid #aed6f1; color: #2c3e50; }
+        .form-control:focus { background-color: #fff; color: #2c3e50; border-color: #3498db; box-shadow: 0 0 5px rgba(52,152,219,0.5); }
+        .form-select { background-color: #fff; border: 1px solid #aed6f1; color: #2c3e50; }
+        .form-select:focus { background-color: #fff; color: #2c3e50; border-color: #3498db; }
+        .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; }
+        .star-rating input { display: none; }
+        .star-rating label { cursor: pointer; font-size: 2rem; color: #aed6f1; transition: color 0.2s; }
+        .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #f39c12; }
+        .alert-success { background-color: #27ae60; border-color: #27ae60; color: #fff; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">MovieHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="movies.html">All Movies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+                </ul>
+                <ul class="navbar-nav" id="userNav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Movie Detail Section -->
+    <div class="container py-5">
+        <div class="row" id="movieDetail">
+            <!-- Movie details will be loaded here -->
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="mb-4">Reviews</h3>
+
+                <!-- User Name Setup (shown once) -->
+                <div id="nameSetup" class="card review-card p-4 mb-4 d-none">
+                    <h5 class="mb-3">Welcome to MovieHub!</h5>
+                    <p class="text-muted">Enter your name to start reviewing movies</p>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="setupName" placeholder="Enter your name">
+                        <button class="btn btn-primary" onclick="saveName()">Save</button>
+                    </div>
+                </div>
+
+                <!-- Add Review Form -->
+                <div id="reviewFormContainer" class="card review-card p-4 mb-4 d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Write a Review</h5>
+                        <span class="text-muted">Reviewing as: <strong id="displayName"></strong> <a href="#" onclick="changeName()" style="color: #3498db; font-size: 0.85rem;">(change)</a></span>
+                    </div>
+                    <div id="successMessage" class="alert alert-success d-none">Review added successfully!</div>
+                    <form id="reviewForm">
+                        <div class="mb-3">
+                            <label class="form-label">Rating</label>
+                            <div class="star-rating">
+                                <input type="radio" id="star5" name="rating" value="5" required>
+                                <label for="star5">★</label>
+                                <input type="radio" id="star4" name="rating" value="4">
+                                <label for="star4">★</label>
+                                <input type="radio" id="star3" name="rating" value="3">
+                                <label for="star3">★</label>
+                                <input type="radio" id="star2" name="rating" value="2">
+                                <label for="star2">★</label>
+                                <input type="radio" id="star1" name="rating" value="1">
+                                <label for="star1">★</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Your Review</label>
+                            <textarea class="form-control" id="reviewContent" rows="4" required placeholder="Write your review here..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </form>
+                </div>
+
+                <!-- Reviews List -->
+                <div id="reviewsList">
+                    <!-- Reviews will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-auto" style="background-color: #5dade2;">
+        <div class="container text-center">
+            <p class="mb-0 text-white">MovieHub - Part 1: Frontend Only</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="data.js"></script>
+    <script>
+        // Get movie ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const movieId = urlParams.get('id');
+
+        // Check if user has set their name
+        function checkUserName() {
+            const userName = localStorage.getItem('moviehub_username');
+            const userNav = document.getElementById('userNav');
+            if (userName) {
+                document.getElementById('nameSetup').classList.add('d-none');
+                document.getElementById('reviewFormContainer').classList.remove('d-none');
+                document.getElementById('displayName').textContent = userName;
+                userNav.innerHTML = `<li class="nav-item"><span class="nav-link">Hi, ${userName}</span></li>`;
+            } else {
+                document.getElementById('nameSetup').classList.remove('d-none');
+                document.getElementById('reviewFormContainer').classList.add('d-none');
+                userNav.innerHTML = '';
+            }
+        }
+
+        // Save user name
+        function saveName() {
+            const name = document.getElementById('setupName').value.trim();
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+            localStorage.setItem('moviehub_username', name);
+            checkUserName();
+        }
+
+        // Change user name
+        function changeName() {
+            localStorage.removeItem('moviehub_username');
+            checkUserName();
+            document.getElementById('setupName').value = '';
+        }
+
+        // Load movie details
+        function loadMovieDetails() {
+            const movie = getMovieById(movieId);
+            if (!movie) {
+                document.getElementById('movieDetail').innerHTML = '<div class="col-12"><h2>Movie not found</h2><a href="index.html" class="btn btn-primary">Back to Home</a></div>';
+                return;
+            }
+
+            document.title = `MovieHub - ${movie.title}`;
+            const avgRating = getAverageRating(movieId);
+            const reviewCount = getReviewCount(movieId);
+
+            document.getElementById('movieDetail').innerHTML = `
+                <div class="col-md-4">
+                    <img src="${movie.poster}" class="img-fluid movie-poster-large" alt="${movie.title}">
+                </div>
+                <div class="col-md-8">
+                    <h1 class="mb-3">${movie.title}</h1>
+                    <span class="badge category-badge mb-3">${movie.category}</span>
+                    <span class="badge bg-secondary mb-3">${movie.year}</span>
+                    <div class="rating-stars mb-3">
+                        ${getStarRating(avgRating)}
+                        <span class="text-muted" style="font-size: 1rem;">(${reviewCount} reviews)</span>
+                    </div>
+                    <p class="lead">${movie.description}</p>
+                    <a href="index.html" class="btn btn-outline-primary mt-3">← Back to Movies</a>
+                </div>
+            `;
+        }
+
+        // Load reviews
+        function loadReviews() {
+            const reviews = getMovieReviews(movieId);
+            const container = document.getElementById('reviewsList');
+
+            if (reviews.length === 0) {
+                container.innerHTML = '<p class="text-muted">No reviews yet. Be the first to review!</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            reviews.reverse().forEach(review => {
+                container.innerHTML += `
+                    <div class="card review-card p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${review.reviewerName}</h6>
+                                <div class="review-rating mb-2">${getStarRating(review.rating)}</div>
+                            </div>
+                            <small class="text-muted">${review.date}</small>
+                        </div>
+                        <p class="mb-0">${review.content}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Get star rating HTML
+        function getStarRating(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= rating ? '★' : '☆';
+            }
+            return stars;
+        }
+
+        // Get average rating
+        function getAverageRating(movieId) {
+            const reviews = getMovieReviews(movieId);
+            if (reviews.length === 0) return 0;
+            const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+            return Math.round(sum / reviews.length);
+        }
+
+        // Get review count
+        function getReviewCount(movieId) {
+            return getMovieReviews(movieId).length;
+        }
+
+        // Handle form submission
+        document.getElementById('reviewForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const userName = localStorage.getItem('moviehub_username');
+            const rating = document.querySelector('input[name="rating"]:checked');
+            const content = document.getElementById('reviewContent').value.trim();
+
+            if (!userName) {
+                alert('Please set your name first');
+                return;
+            }
+
+            if (!rating || !content) {
+                alert('Please select a rating and write your review');
+                return;
+            }
+
+            addReview(movieId, userName, rating.value, content);
+
+            // Show success message
+            document.getElementById('successMessage').classList.remove('d-none');
+            setTimeout(() => {
+                document.getElementById('successMessage').classList.add('d-none');
+            }, 3000);
+
+            // Reset form
+            this.reset();
+
+            // Reload reviews
+            loadReviews();
+            loadMovieDetails();
+        });
+
+        // Allow pressing Enter in name setup
+        document.getElementById('setupName').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') saveName();
+        });
+
+        // Initial load
+        checkUserName();
+        loadMovieDetails();
+        loadReviews();
+    </script>
+</body>
+</html>

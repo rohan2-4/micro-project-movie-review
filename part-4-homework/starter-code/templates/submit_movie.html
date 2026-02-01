@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieHub - Submit Movie</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #e8f4fc; color: #2c3e50; min-height: 100vh; }
+        .navbar { background-color: #5dade2 !important; }
+        .navbar-brand { color: #fff !important; font-weight: bold; font-size: 1.5rem; }
+        .nav-link { color: #fff !important; }
+        .nav-link:hover { color: #1a5276 !important; }
+        .submit-card { background-color: #fff; border: 1px solid #aed6f1; max-width: 600px; margin: 30px auto; }
+        .form-control, .form-select { background-color: #fff; border: 1px solid #aed6f1; color: #2c3e50; }
+        .form-control:focus, .form-select:focus { background-color: #fff; color: #2c3e50; border-color: #3498db; box-shadow: 0 0 5px rgba(52,152,219,0.5); }
+        .btn-primary { background-color: #3498db; border-color: #3498db; }
+        .btn-primary:hover { background-color: #2980b9; border-color: #2980b9; }
+        .poster-preview { max-height: 200px; object-fit: cover; border-radius: 5px; }
+        .submission-card { background-color: #fff; border: 1px solid #aed6f1; margin-bottom: 10px; }
+        .status-pending { color: #f39c12; }
+        .status-verified { color: #28a745; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">MovieHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/movies">All Movies</a></li>
+                </ul>
+                <ul class="navbar-nav" id="authNav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="card submit-card p-4">
+            <h3 class="mb-4">Submit a Movie</h3>
+            <p class="text-muted mb-4">Can't find a movie? Submit it for review. Once verified by admin, it will appear on the platform.</p>
+
+            <div id="messageAlert" class="alert d-none"></div>
+
+            <!-- Check if movie exists -->
+            <div class="mb-4">
+                <label class="form-label">First, check if movie exists:</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="checkTitle" placeholder="Enter movie title">
+                    <button class="btn btn-outline-light" onclick="checkMovie()">Check</button>
+                </div>
+                <div id="checkResult" class="mt-2"></div>
+            </div>
+
+            <hr style="border-color: #444;">
+
+            <!-- Submit Form -->
+            <form id="submitForm">
+                <div class="mb-3">
+                    <label class="form-label">Movie Title</label>
+                    <input type="text" class="form-control" id="title" required placeholder="Enter movie title">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="category" required>
+                            <option value="Action">Action</option>
+                            <option value="Comedy">Comedy</option>
+                            <option value="Drama">Drama</option>
+                            <option value="Horror">Horror</option>
+                            <option value="Sci-Fi">Sci-Fi</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Year</label>
+                        <input type="number" class="form-control" id="year" required min="1900" max="2030" placeholder="2024">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Poster URL</label>
+                    <input type="url" class="form-control" id="posterUrl" required placeholder="https://...">
+                    <small class="text-muted">Paste image URL from IMDB or other movie sites</small>
+                </div>
+                <div id="posterPreview" class="mb-3 text-center d-none">
+                    <img id="previewImg" class="poster-preview" alt="Preview">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description (optional)</label>
+                    <textarea class="form-control" id="description" rows="3" placeholder="Brief description of the movie"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Submit Movie</button>
+            </form>
+        </div>
+
+        <!-- My Submissions -->
+        <div class="card submit-card p-4 mt-4">
+            <h4 class="mb-3">My Submissions</h4>
+            <div id="submissionsContainer">
+                <p class="text-muted">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-4 mt-auto" style="background-color: #5dade2;">
+        <div class="container text-center">
+            <p class="mb-0 text-white">MovieHub - Part 4: Homework</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+        if (!token || !user) {
+            window.location.href = '/login';
+        }
+
+        function updateNav() {
+            document.getElementById('authNav').innerHTML = `
+                <li class="nav-item"><a class="nav-link active" href="/submit-movie">Submit Movie</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard">My Reviews</a></li>
+                ${user.is_admin ? '<li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>' : ''}
+                <li class="nav-item"><span class="nav-link">Hi, ${user.username}</span></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+            `;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        // Check if movie exists
+        async function checkMovie() {
+            const title = document.getElementById('checkTitle').value.trim();
+            if (!title) return;
+
+            const res = await fetch('/api/movies/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ title })
+            });
+            const data = await res.json();
+
+            const resultDiv = document.getElementById('checkResult');
+            if (data.exists) {
+                const status = data.is_verified ? '(Available)' : '(Pending Verification)';
+                resultDiv.innerHTML = `<span class="text-warning">Movie already exists: ${data.message} ${status}</span>`;
+            } else {
+                resultDiv.innerHTML = `<span class="text-success">Movie not found. You can submit it!</span>`;
+                document.getElementById('title').value = title;
+            }
+        }
+
+        // Preview poster
+        document.getElementById('posterUrl').addEventListener('input', function() {
+            const url = this.value;
+            if (url) {
+                document.getElementById('previewImg').src = url;
+                document.getElementById('posterPreview').classList.remove('d-none');
+            } else {
+                document.getElementById('posterPreview').classList.add('d-none');
+            }
+        });
+
+        // Submit movie
+        document.getElementById('submitForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const movie = {
+                title: document.getElementById('title').value,
+                category: document.getElementById('category').value,
+                year: parseInt(document.getElementById('year').value),
+                poster_url: document.getElementById('posterUrl').value,
+                description: document.getElementById('description').value
+            };
+
+            const res = await fetch('/api/movies/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(movie)
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                showMessage('Movie submitted! Waiting for admin verification.', 'success');
+                document.getElementById('submitForm').reset();
+                document.getElementById('posterPreview').classList.add('d-none');
+                loadMySubmissions();
+            } else {
+                showMessage(data.error, 'danger');
+            }
+        });
+
+        // Load my submissions
+        async function loadMySubmissions() {
+            const res = await fetch('/api/my-submissions', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            const container = document.getElementById('submissionsContainer');
+
+            if (data.movies.length === 0) {
+                container.innerHTML = '<p class="text-muted">No submissions yet.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            data.movies.forEach(movie => {
+                const status = movie.is_verified
+                    ? '<span class="status-verified">Verified</span>'
+                    : '<span class="status-pending">Pending</span>';
+
+                container.innerHTML += `
+                    <div class="card submission-card p-3">
+                        <div class="d-flex align-items-center">
+                            <img src="${movie.poster_url}" style="width: 50px; height: 75px; object-fit: cover;" class="me-3">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">${movie.title}</h6>
+                                <small class="text-muted">${movie.category} | ${movie.year}</small>
+                            </div>
+                            <div>${status}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function showMessage(msg, type) {
+            const el = document.getElementById('messageAlert');
+            el.textContent = msg;
+            el.className = `alert alert-${type}`;
+            setTimeout(() => el.className = 'alert d-none', 4000);
+        }
+
+        updateNav();
+        loadMySubmissions();
+    </script>
+</body>
+</html>

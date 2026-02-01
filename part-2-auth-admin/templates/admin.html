@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieHub - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #e8f4fc; color: #2c3e50; min-height: 100vh; }
+        .navbar { background-color: #5dade2 !important; }
+        .navbar-brand { color: #fff !important; font-weight: bold; font-size: 1.5rem; }
+        .nav-link { color: #fff !important; }
+        .nav-link:hover, .nav-link.active { color: #1a5276 !important; }
+        .stat-card { background-color: #fff; border: 1px solid #aed6f1; text-align: center; padding: 20px; }
+        .stat-number { font-size: 2.5rem; color: #3498db; }
+        .movie-card { background-color: #fff; border: 1px solid #aed6f1; margin-bottom: 15px; }
+        .form-control, .form-select { background-color: #fff; border: 1px solid #aed6f1; color: #2c3e50; }
+        .form-control:focus, .form-select:focus { background-color: #fff; color: #2c3e50; border-color: #3498db; box-shadow: 0 0 5px rgba(52,152,219,0.5); }
+        .btn-primary { background-color: #3498db; border-color: #3498db; }
+        .btn-primary:hover { background-color: #2980b9; border-color: #2980b9; }
+        .movie-poster-sm { width: 60px; height: 90px; object-fit: cover; }
+        .nav-tabs .nav-link { color: #7f8c8d; border: none; }
+        .nav-tabs .nav-link.active { color: #3498db; background-color: transparent; border-bottom: 2px solid #3498db; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">MovieHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/movies">All Movies</a></li>
+                </ul>
+                <ul class="navbar-nav" id="authNav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <h1 class="mb-4">Admin Panel</h1>
+
+        <!-- Stats -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="totalUsers">-</div>
+                    <div>Total Users</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="totalMovies">-</div>
+                    <div>Total Movies</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="totalReviews">-</div>
+                    <div>Total Reviews</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="adminTabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-tab="add">Add Movie</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-tab="manage">Manage Movies</a>
+            </li>
+        </ul>
+
+        <!-- Add Movie Tab -->
+        <div id="addTab">
+            <div class="card movie-card p-4">
+                <h4 class="mb-3">Add New Movie</h4>
+                <div id="addMessage" class="alert d-none"></div>
+                <form id="addMovieForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="category" required>
+                                <option value="Action">Action</option>
+                                <option value="Comedy">Comedy</option>
+                                <option value="Drama">Drama</option>
+                                <option value="Horror">Horror</option>
+                                <option value="Sci-Fi">Sci-Fi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Year</label>
+                            <input type="number" class="form-control" id="year" required min="1900" max="2030">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Poster URL</label>
+                        <input type="url" class="form-control" id="posterUrl" required placeholder="https://...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Movie</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Manage Movies Tab -->
+        <div id="manageTab" class="d-none">
+            <div id="moviesContainer">
+                <p>Loading movies...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: #fff; color: #2c3e50;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Edit Movie</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editMovieForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" id="editTitle" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="editCategory" required>
+                                    <option value="Action">Action</option>
+                                    <option value="Comedy">Comedy</option>
+                                    <option value="Drama">Drama</option>
+                                    <option value="Horror">Horror</option>
+                                    <option value="Sci-Fi">Sci-Fi</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Year</label>
+                                <input type="number" class="form-control" id="editYear" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Poster URL</label>
+                            <input type="url" class="form-control" id="editPosterUrl" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEdit()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-4 mt-auto" style="background-color: #5dade2;">
+        <div class="container text-center">
+            <p class="mb-0 text-white">MovieHub - Part 2: Auth & Admin</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+        if (!token || !user || !user.is_admin) {
+            window.location.href = '/';
+        }
+
+        function updateNav() {
+            document.getElementById('authNav').innerHTML = `
+                <li class="nav-item"><a class="nav-link" href="/dashboard">My Reviews</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/admin">Admin</a></li>
+                <li class="nav-item"><span class="nav-link">Hi, ${user.username}</span></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+            `;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        // Tab switching
+        document.querySelectorAll('#adminTabs .nav-link').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('#adminTabs .nav-link').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                document.getElementById('addTab').classList.add('d-none');
+                document.getElementById('manageTab').classList.add('d-none');
+
+                if (this.dataset.tab === 'add') {
+                    document.getElementById('addTab').classList.remove('d-none');
+                } else {
+                    document.getElementById('manageTab').classList.remove('d-none');
+                    loadMovies();
+                }
+            });
+        });
+
+        async function loadStats() {
+            const res = await fetch('/api/admin/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            document.getElementById('totalUsers').textContent = data.total_users;
+            document.getElementById('totalMovies').textContent = data.total_movies;
+            document.getElementById('totalReviews').textContent = data.total_reviews;
+        }
+
+        async function loadMovies() {
+            const res = await fetch('/api/movies');
+            const data = await res.json();
+            const container = document.getElementById('moviesContainer');
+
+            container.innerHTML = '';
+            data.movies.forEach(movie => {
+                container.innerHTML += `
+                    <div class="card movie-card p-3">
+                        <div class="d-flex align-items-center">
+                            <img src="${movie.poster_url}" class="movie-poster-sm me-3" alt="${movie.title}">
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">${movie.title}</h5>
+                                <span class="badge bg-secondary me-2">${movie.category}</span>
+                                <span class="badge bg-dark">${movie.year}</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-light me-2" onclick="editMovie(${movie.id})">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteMovie(${movie.id})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Add Movie
+        document.getElementById('addMovieForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const movie = {
+                title: document.getElementById('title').value,
+                category: document.getElementById('category').value,
+                year: parseInt(document.getElementById('year').value),
+                poster_url: document.getElementById('posterUrl').value,
+                description: document.getElementById('description').value
+            };
+
+            const res = await fetch('/api/movies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(movie)
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                showMessage('addMessage', 'Movie added!', 'success');
+                document.getElementById('addMovieForm').reset();
+                loadStats();
+            } else {
+                showMessage('addMessage', data.error, 'danger');
+            }
+        });
+
+        async function editMovie(id) {
+            const res = await fetch(`/api/movies/${id}`);
+            const data = await res.json();
+            const movie = data.movie;
+
+            document.getElementById('editId').value = movie.id;
+            document.getElementById('editTitle').value = movie.title;
+            document.getElementById('editCategory').value = movie.category;
+            document.getElementById('editYear').value = movie.year;
+            document.getElementById('editPosterUrl').value = movie.poster_url;
+            document.getElementById('editDescription').value = movie.description || '';
+
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        async function saveEdit() {
+            const id = document.getElementById('editId').value;
+            const movie = {
+                title: document.getElementById('editTitle').value,
+                category: document.getElementById('editCategory').value,
+                year: parseInt(document.getElementById('editYear').value),
+                poster_url: document.getElementById('editPosterUrl').value,
+                description: document.getElementById('editDescription').value
+            };
+
+            const res = await fetch(`/api/movies/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(movie)
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                loadMovies();
+            }
+        }
+
+        async function deleteMovie(id) {
+            if (!confirm('Delete this movie? All reviews will also be deleted.')) return;
+
+            const res = await fetch(`/api/movies/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                loadMovies();
+                loadStats();
+            }
+        }
+
+        function showMessage(elementId, msg, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = msg;
+            el.className = `alert alert-${type}`;
+            setTimeout(() => el.className = 'alert d-none', 3000);
+        }
+
+        updateNav();
+        loadStats();
+    </script>
+</body>
+</html>
