@@ -53,10 +53,10 @@
 
         <!-- Search and Filter -->
         <div class="row mb-4">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                 <input type="text" class="form-control search-box" id="searchInput" placeholder="Search by title...">
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4 mb-3">
                 <div id="categoryButtons">
                     <button class="btn btn-outline-primary category-btn active" data-category="">All</button>
                     <button class="btn btn-outline-primary category-btn" data-category="Action">Action</button>
@@ -65,6 +65,11 @@
                     <button class="btn btn-outline-primary category-btn" data-category="Horror">Horror</button>
                     <button class="btn btn-outline-primary category-btn" data-category="Sci-Fi">Sci-Fi</button>
                 </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <select class="form-select" id="yearFilter">
+                    <option value="">All Years</option>
+                </select>
             </div>
         </div>
 
@@ -88,6 +93,7 @@
     <script src="data.js"></script>
     <script>
         let selectedCategory = '';
+    let selectedYear = '';
 
         // Display movies
         function displayMovies(moviesToShow) {
@@ -150,11 +156,13 @@
         // Filter movies
         function filterMovies() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const year = selectedYear;
 
             let filtered = movies.filter(movie => {
                 const matchesSearch = movie.title.toLowerCase().includes(searchTerm);
                 const matchesCategory = selectedCategory === '' || movie.category === selectedCategory;
-                return matchesSearch && matchesCategory;
+                const matchesYear = year === '' || movie.year.toString() === year;
+                return matchesSearch && matchesCategory && matchesYear;
             });
 
             displayMovies(filtered);
@@ -170,6 +178,12 @@
             });
         });
 
+        // Year filter change
+        document.getElementById('yearFilter').addEventListener('change', function() {
+            selectedYear = this.value;
+            filterMovies();
+        });
+
         // Search input
         document.getElementById('searchInput').addEventListener('input', filterMovies);
 
@@ -183,7 +197,21 @@
         }
 
         // Initial load
+        // Populate year filter dropdown
+        function populateYearFilter() {
+            const yearSet = new Set(movies.map(m => m.year));
+            const years = Array.from(yearSet).sort((a, b) => b - a);
+            const yearFilter = document.getElementById('yearFilter');
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            });
+        }
+
         updateUserNav();
+        populateYearFilter();
         displayMovies(movies);
     </script>
 </body>

@@ -62,6 +62,13 @@
             <div class="col-12">
                 <h3 class="mb-4">Reviews</h3>
 
+                <!-- Sort Buttons -->
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <span class="me-2">Sort by:</span>
+                    <button class="btn btn-outline-primary btn-sm sort-btn active" data-sort="date">Date</button>
+                    <button class="btn btn-outline-primary btn-sm sort-btn" data-sort="rating">Rating</button>
+                </div>
+
                 <!-- User Name Setup (shown once) -->
                 <div id="nameSetup" class="card review-card p-4 mb-4 d-none">
                     <h5 class="mb-3">Welcome to MovieHub!</h5>
@@ -191,8 +198,16 @@
 
         // Load reviews
         function loadReviews() {
-            const reviews = getMovieReviews(movieId);
+            let reviews = getMovieReviews(movieId);
             const container = document.getElementById('reviewsList');
+
+            // Sort reviews
+            if (window.selectedSort === 'rating') {
+                reviews = reviews.slice().sort((a, b) => b.rating - a.rating || new Date(b.date) - new Date(a.date));
+            } else {
+                // Default: sort by date (newest first)
+                reviews = reviews.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
 
             if (reviews.length === 0) {
                 container.innerHTML = '<p class="text-muted">No reviews yet. Be the first to review!</p>';
@@ -200,17 +215,27 @@
             }
 
             container.innerHTML = '';
-            reviews.reverse().forEach(review => {
+            reviews.forEach(review => {
+                const userName = localStorage.getItem('moviehub_username');
+                const isOwner = userName && userName === review.reviewerName;
                 container.innerHTML += `
-                    <div class="card review-card p-3">
+                    <div class="card review-card p-3 mb-2">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h6 class="mb-1">${review.reviewerName}</h6>
                                 <div class="review-rating mb-2">${getStarRating(review.rating)}</div>
                             </div>
-                            <small class="text-muted">${review.date}</small>
+                            <div class="d-flex flex-column align-items-end">
+                                <small class="text-muted">${review.date}</small>
+                                ${isOwner ? `
+                                    <div class="mt-2">
+                                        <button class="btn btn-sm btn-outline-secondary me-1 edit-review-btn" data-id="${review.id}">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger delete-review-btn" data-id="${review.id}">Delete</button>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
-                        <p class="mb-0">${review.content}</p>
+                        <p class="mb-0" id="review-content-${review.id}">${review.content}</p>
                     </div>
                 `;
             });
@@ -278,9 +303,62 @@
         });
 
         // Initial load
+        // Sort state
+        window.selectedSort = 'date';
+
+        // Sort button click
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                window.selectedSort = this.dataset.sort;
+                loadReviews();
+            });
+        });
+
         checkUserName();
         loadMovieDetails();
         loadReviews();
+
+        // Delegate edit/delete review button events
+        document.getElementById('reviewsList').addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-review-btn')) {
+                const reviewId = parseInt(e.target.dataset.id);
+                if (confirm('Are you sure you want to delete this review?')) {
+                    deleteReview(reviewId);
+                    loadReviews();
+                    loadMovieDetails();
+                }
+            } else if (e.target.classList.contains('edit-review-btn')) {
+                const reviewId = parseInt(e.target.dataset.id);
+                const review = getReviews().find(r => r.id === reviewId);
+                if (!review) return;
+                // Show edit form inline
+                const contentP = document.getElementById('review-content-' + reviewId);
+                const originalContent = review.content;
+                contentP.innerHTML = `
+                    <textarea class="form-control mb-2" id="edit-content-${reviewId}" rows="2">${review.content}</textarea>
+                    <button class="btn btn-sm btn-primary me-1" id="save-edit-${reviewId}">Save</button>
+                    <button class="btn btn-sm btn-secondary" id="cancel-edit-${reviewId}">Cancel</button>
+                `;
+                // Save/cancel handlers
+                document.getElementById('save-edit-' + reviewId).onclick = function() {
+                    const newContent = document.getElementById('edit-content-' + reviewId).value.trim();
+                    if (!newContent) { alert('Review cannot be empty.'); return; }
+                    // Update review in localStorage
+                    const reviews = getReviews();
+                    const idx = reviews.findIndex(r => r.id === reviewId);
+                    if (idx !== -1) {
+                        reviews[idx].content = newContent;
+                        localStorage.setItem('movieReviews', JSON.stringify(reviews));
+                        loadReviews();
+                    }
+                };
+                document.getElementById('cancel-edit-' + reviewId).onclick = function() {
+                    contentP.textContent = originalContent;
+                };
+            }
+        });
     </script>
 </body>
 </html>
